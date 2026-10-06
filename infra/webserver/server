@@ -1,0 +1,69 @@
+"""
+Sentinel-X - Serveur web HTTPS de test (FastAPI + uvicorn)
+
+Serveur minimal et temporaire, en attendant le backend FastAPI de la filiere DEV.
+Il expose le point d'entree impose par le sujet (POST /api/v1/alerts) en HTTPS,
+avec le certificat serveur genere par scripts/generate-certs.sh.
+
+Configuration par variables d'environnement (aucun secret dans le depot) :
+  SENTINEL_API_KEY   cle attendue dans l'en-tete X-API-Key (vide = pas d'auth, tests seulement)
+  SENTINEL_CERT_DIR  dossier de server.crt / server.key (defaut : infra/mosquitto/certs)
+  SENTINEL_WEB_PORT  port d'ecoute (defaut : 8443)
+
+Lancement :
+  python infra/webserver/server.py
+"""
+
+import os
+import secrets
+from collections import deque
+from datetime import datetime, timezone
+
+import uvicorn
+from fastapi import Depends, FastAPI, Header, HTTPException, Request
+
+CERT_DIR = os.getenv("SENTINEL_CERT_DIR", "infra/mosquitto/certs")
+API_KEY = os.getenv("SENTINEL_API_KEY", "")
+PORT = int(os.getenv("SENTINEL_WEB_PORT", "8443"))
+
+app = FastAPI(title="Sentinel-X - serveur web de test")
+events = deque(maxlen=200)  # historique borne en memoire
+
+
+def check_key(x_api_key: str | None = Header(default=None)):
+    if API_KEY and not secrets.compare_digest(x_api_key or "", API_KEY):
+        raise HTTPException(status_code=401, detail="cle API invalide")
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+@app.post("/api/v1/alerts", dependencies=[Depends(check_key)])
+async def receive_alert(request: Request):
+    try:
+        data = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="JSON invalide")
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=400, detail="objet JSON attendu")
+    data["received_at"] = datetime.now(timezone.utc).isoformat()
+    events.append(data)
+    print(f"[ALERTE] {data}", flush=True)
+    return {"ok": True}
+
+
+@app.get("/api/v1/events", dependencies=[Depends(check_key)])
+def list_events():
+    return list(events)
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        app,
+        host="0.0.0.0",
+        port=PORT,
+        ssl_certfile=os.path.join(CERT_DIR, "server.crt"),
+        ssl_keyfile=os.path.join(CERT_DIR, "server.key"),
+    )
