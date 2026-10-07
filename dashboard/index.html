@@ -2,10 +2,349 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Sentinel-X</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENTINEL-X | Centre de Commandement</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #07090f;
+            --panel-bg: rgba(17, 24, 39, 0.7);
+            --border-color: #1e293b;
+            --accent-cyan: #06b6d4;
+            --accent-red: #ef4444;
+            --accent-green: #10b981;
+            --accent-warning: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(6, 182, 212, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(239, 68, 68, 0.05), transparent 25%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            padding: 30px 40px;
+            box-sizing: border-box;
+            overflow: hidden; 
+        }
+
+        /* --- EN-TÊTE --- */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            margin: 0;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
+        }
+
+        .header h1 span { color: var(--accent-cyan); }
+        .header p { color: var(--text-muted); font-size: 1rem; letter-spacing: 2px; margin-top: 5px; }
+
+        /* --- LAYOUT PRINCIPAL --- */
+        .main-workspace {
+            display: grid;
+            grid-template-columns: 550px 1fr; 
+            gap: 35px; 
+            flex-grow: 1;
+            min-height: 0; 
+            width: 100%;
+            max-width: 1800px; 
+            margin: 0 auto;
+        }
+
+        /* --- COLONNE DE GAUCHE : TÉLÉMÉTRIE --- */
+        .telemetry-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr; 
+            column-gap: 20px;
+            row-gap: 10px;
+            align-content: start;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .telemetry-panel::-webkit-scrollbar { width: 6px; }
+        .telemetry-panel::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+        .card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 50px 20px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        #card-gas {
+            padding: 40px 20px;
+        }   
+
+        .card.full-width {
+            grid-column: 1 / -1; 
+        }
+
+        .card:hover { border-color: var(--accent-cyan); }
+        
+        .card.alert-mode {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.3);
+            animation: red-pulse 1.5s infinite;
+        }
+
+        .card h2 {
+            margin: 0 0 15px 0;
+            color: var(--text-muted);
+            font-size: 1.1rem; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.2rem; 
+            font-weight: 700;
+            margin: 0;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+
+        .value.safe { color: var(--accent-green); text-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+        .value.warning { color: var(--accent-warning); text-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+        .value.danger { color: var(--accent-red); text-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+        .value.small { font-size: 2rem; margin-bottom: 20px; }
+
+        .status-badge {
+            margin-top: 15px;
+            padding: 10px 25px; 
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 1px;
+        }
+        
+        .status-badge.safe { background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent-green); color: var(--accent-green); }
+        .status-badge.warning { background: rgba(245, 158, 11, 0.15); border: 1px solid var(--accent-warning); color: var(--accent-warning); }
+        .status-badge.danger { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--accent-red); color: var(--accent-red); animation: red-pulse 1.5s infinite; }
+
+        .control-btn {
+            background: transparent;
+            border: 2px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 15px 30px; 
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .control-btn:hover { background: var(--accent-cyan); color: var(--bg-dark); }
+        .control-btn.disabled-state { border-color: var(--accent-red); color: var(--accent-red); }
+        .control-btn.disabled-state:hover { background: var(--accent-red); color: white; }
+
+        /* --- COLONNE DE DROITE : CAMÉRA --- */
+        .video-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .video-panel h2 {
+            margin: 0 0 15px 0;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .camera-container {
+            flex-grow: 1; 
+            width: 100%;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            overflow: hidden;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .camera-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; 
+        }
+
+        @keyframes red-pulse {
+            0% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+            50% { box-shadow: 0 0 35px rgba(239, 68, 68, 0.6); }
+            100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+        }
+    </style>
 </head>
 <body>
-    <h1>Sentinel-X</h1>
-    <p>Dashboard opérationnel.</p>
+
+    <div class="header">
+        <h1>Aether<span>Corp</span></h1>
+        <p>SENTINEL-X | CENTRE DE SUPERVISION</p>
+    </div>
+
+    <div class="main-workspace">
+        
+        <div class="telemetry-panel">
+            
+            <div class="card">
+                <h2>Température</h2>
+                <div class="value" id="val-temp">--.-</div>
+            </div>
+
+            <div class="card">
+                <h2>Humidité</h2>
+                <div class="value" id="val-hum">--.-</div>
+            </div>
+
+            <div class="card full-width" id="card-gas">
+                <h2>Qualité de l'Air (MQ-2)</h2>
+                <div class="value" id="val-gaz">--</div>
+                <div class="status-badge" id="badge-gaz">INITIALISATION</div>
+            </div>
+
+            <div class="card full-width" id="card-security">
+                <h2>Périmètre (PIR)</h2>
+                <div class="value safe" id="val-intrusion">SÉCURISÉ</div>
+            </div>
+
+            <div class="card full-width">
+                <h2>Actionneur Physique</h2>
+                <div class="value small safe" id="val-alarme">ARMÉ</div>
+                <button class="control-btn" id="btn-alarme" onclick="toggleAlarme()">DÉSARMER LE SYSTÈME</button>
+            </div>
+
+        </div>
+
+        <div class="video-panel">
+            <h2>Surveillance Visuelle Directe</h2>
+            <div class="camera-container">
+                <img src="/video_feed" alt="Signal Caméra Perdu">
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function fetchData() {
+            fetch('/api/v1/status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('val-temp').innerText = data.temperature !== "--" ? data.temperature + "°" : "--.-";
+                    document.getElementById('val-hum').innerText = data.humidite !== "--" ? data.humidite + "%" : "--.-";
+                    
+                    const gazVal = data.gaz !== "--" ? parseInt(data.gaz) : "--";
+                    const gazEl = document.getElementById('val-gaz');
+                    const gazBadge = document.getElementById('badge-gaz');
+                    const cardGas = document.getElementById('card-gas');
+
+                    if (gazVal !== "--") {
+                        gazEl.innerText = gazVal;
+                        if (gazVal < 400) {
+                            gazEl.className = "value safe";
+                            gazBadge.className = "status-badge safe";
+                            gazBadge.innerText = "AIR PUR (NORMAL)";
+                            cardGas.classList.remove("alert-mode");
+                        } else if (gazVal >= 400 && gazVal <= 1000) {
+                            gazEl.className = "value warning";
+                            gazBadge.className = "status-badge warning";
+                            gazBadge.innerText = "AIR VICIÉ (PRÉ-ALERTE)";
+                            cardGas.classList.remove("alert-mode");
+                        } else {
+                            gazEl.className = "value danger";
+                            gazBadge.className = "status-badge danger";
+                            gazBadge.innerText = "AIR INTOXIQUÉ (CRITIQUE)";
+                            cardGas.classList.add("alert-mode"); 
+                        }
+                    }
+
+                    // --- CORRECTION : FUSION PIR + IA ---
+                    const cardSec = document.getElementById('card-security');
+                    const valIntrusion = document.getElementById('val-intrusion');
+                    
+                    if(data.intrusion || data.ia_humain) {
+                        cardSec.className = "card full-width alert-mode";
+                        valIntrusion.className = "value danger";
+                        
+                        if (data.ia_humain) {
+                            valIntrusion.innerText = "ALERTE (CAM)";
+                        } else {
+                            valIntrusion.innerText = "INTRUSION (PIR) !";
+                        }
+                    } else {
+                        cardSec.className = "card full-width";
+                        valIntrusion.className = "value safe";
+                        valIntrusion.innerText = "SÉCURISÉ";
+                    }
+
+                    const alarmeStatus = document.getElementById('val-alarme');
+                    const alarmeBtn = document.getElementById('btn-alarme');
+
+                    if(data.alarme_active) {
+                        alarmeStatus.innerText = "ARMÉ";
+                        alarmeStatus.className = "value small safe";
+                        alarmeBtn.innerText = "DÉSARMER";
+                        alarmeBtn.className = "control-btn disabled-state"; 
+                    } else {
+                        alarmeStatus.innerText = "DÉSARMÉ";
+                        alarmeStatus.className = "value small danger";
+                        alarmeBtn.innerText = "RÉARMER";
+                        alarmeBtn.className = "control-btn"; 
+                    }
+                })
+                .catch(err => console.log("Erreur de connexion", err));
+        }
+
+        function toggleAlarme() {
+            fetch('/api/v1/control', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({action: 'toggle'})
+            }).then(() => fetchData());
+        }
+
+        setInterval(fetchData, 1000); 
+        fetchData();
+    </script>
 </body>
 </html>

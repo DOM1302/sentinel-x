@@ -6,10 +6,14 @@ services:
     restart: unless-stopped
     ports:
       - "1883:1883"
+      - "8883:8883"
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
+      - ./mosquitto/certs/ca.crt:/mosquitto/certs/ca.crt:ro
+      - ./mosquitto/certs/server.crt:/mosquitto/certs/server.crt:ro
+      - /opt/sentinel-secrets/mosquitto/server.key:/mosquitto/certs/server.key:ro
     networks:
       - sentinel-net
 
@@ -21,8 +25,6 @@ services:
     environment:
       MQTT_HOST: mosquitto
       MQTT_PORT: 1883
-    ports:
-      - "8000:8000"
     depends_on:
       - mosquitto
     networks:
@@ -33,9 +35,12 @@ services:
     container_name: sentinel-dashboard
     restart: unless-stopped
     ports:
-      - "1111:80"
+      - "80:80"
+      - "443:443"
     volumes:
       - ./dashboard:/usr/share/nginx/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
     depends_on:
       - backend
     networks:
