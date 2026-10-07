@@ -15,3 +15,16 @@ mosquitto/log/
 
 # esp
 secrets.h
+
+# Local/runtime
+*.swp
+__pycache__/
+*.pyc
+*.log
+
+# Temporary files
+*.bak
+*.yamly
+
+# Local ML models
+*.pt
