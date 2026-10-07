@@ -12,3 +12,6 @@ mosquitto/certs/*.srl
 # Mosquitto runtime data
 mosquitto/data/
 mosquitto/log/
+
+# esp
+secrets.h
