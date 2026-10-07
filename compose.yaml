@@ -4,11 +4,43 @@ services:
     image: eclipse-mosquitto:2
     container_name: sentinel-mosquitto
     restart: unless-stopped
-
     ports:
       - "1883:1883"
-
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
+    networks:
+      - sentinel-net
+
+  backend:
+    build:
+      context: ./backend
+    container_name: sentinel-backend
+    restart: unless-stopped
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: 1883
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mosquitto
+    networks:
+      - sentinel-net
+
+  dashboard:
+    image: nginx:alpine
+    container_name: sentinel-dashboard
+    restart: unless-stopped
+    ports:
+      - "1111:80"
+    volumes:
+      - ./dashboard:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+    networks:
+      - sentinel-net
+
+networks:
+  sentinel-net:
+    driver: bridge

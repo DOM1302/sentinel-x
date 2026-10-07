@@ -1,0 +1,14 @@
+# Secrets
+.env
+*.key
+*.csr
+*.srl
+
+# TLS private material
+mosquitto/certs/*.key
+mosquitto/certs/*.csr
+mosquitto/certs/*.srl
+
+# Mosquitto runtime data
+mosquitto/data/
+mosquitto/log/
