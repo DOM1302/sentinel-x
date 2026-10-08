@@ -4,6 +4,7 @@ WORKDIR /app
 
 ENV PYTHONUNBUFFERED=1
 ENV OMP_NUM_THREADS=2
+ENV YOLO_CONFIG_DIR=/tmp
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -16,10 +17,13 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY serveur.py .
-COPY yolov8n.pt .
+COPY serveur_tls.py .
 COPY templates/ ./templates/
 
-EXPOSE 5000
+# YOLO téléchargera son modèle si absent.
+# Pour une démonstration hors ligne, prévoir un
+# montage local du fichier yolov8n.pt.
 
-CMD ["python", "serveur.py"]
+EXPOSE 5001
+
+CMD ["python", "serveur_tls.py"]
