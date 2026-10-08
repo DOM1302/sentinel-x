@@ -1,0 +1,34 @@
+services:
+  flask:
+    image: sentinel-flask:test
+    container_name: sentinel-flask-compose
+    restart: unless-stopped
+
+    network_mode: host
+
+    devices:
+      - /dev/video0:/dev/video0
+
+    volumes:
+      - ./integration/flask/serveur_tls.py:/app/serveur_tls.py:ro
+      - ./mosquitto/certs/ca.crt:/app/certs/ca.crt:ro
+
+    environment:
+      YOLO_CONFIG_DIR: /tmp
+      OMP_NUM_THREADS: "2"
+
+    cpus: 2
+
+    entrypoint: ["python"]
+
+    command:
+      - "-m"
+      - "flask"
+      - "--app"
+      - "serveur_tls"
+      - "run"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "5001"
+      - "--no-reload"
