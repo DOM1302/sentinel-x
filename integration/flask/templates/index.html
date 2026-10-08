@@ -1,0 +1,636 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENTINEL-X | Centre de Commandement</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@500;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+        :root {
+            --bg-dark: #07090f;
+            --panel-bg: rgba(17, 24, 39, 0.7);
+            --border-color: #1e293b;
+            --accent-cyan: #06b6d4;
+            --accent-red: #ef4444;
+            --accent-green: #10b981;
+            --accent-warning: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image:
+                radial-gradient(circle at 15% 50%, rgba(6,182,212,0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(239,68,68,0.05), transparent 25%);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px 32px;
+        }
+
+        /* EN-TÊTE */
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(6,182,212,0.4);
+        }
+
+        .header h1 span {
+            color: var(--accent-cyan);
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            letter-spacing: 2px;
+            margin-top: 8px;
+        }
+
+        /* LAYOUT PRINCIPAL */
+
+        .main-workspace {
+            display: grid;
+            grid-template-columns: minmax(320px, 440px) minmax(0, 1fr);
+            gap: 24px;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            max-width: 1800px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        /* TÉLÉMÉTRIE */
+
+        .telemetry-panel {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            align-content: start;
+        }
+
+        .card {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            text-align: center;
+            min-width: 0;
+        }
+
+        .card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .card:hover {
+            border-color: var(--accent-cyan);
+        }
+
+        .card.alert-mode {
+            border-color: var(--accent-red);
+            box-shadow: 0 0 30px rgba(239,68,68,0.3);
+            animation: red-pulse 1.5s infinite;
+        }
+
+        .card h2 {
+            margin: 0 0 15px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .value {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.6rem, 3vw, 2.8rem);
+            font-weight: 700;
+            margin: 0;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 15px rgba(6,182,212,0.3);
+            overflow-wrap: anywhere;
+        }
+
+        .value.safe {
+            color: var(--accent-green);
+        }
+
+        .value.warning {
+            color: var(--accent-warning);
+        }
+
+        .value.danger {
+            color: var(--accent-red);
+        }
+
+        .value.small {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .status-badge {
+            margin-top: 15px;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+            max-width: 100%;
+        }
+
+        .status-badge.safe {
+            background: rgba(16,185,129,0.15);
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .status-badge.warning {
+            background: rgba(245,158,11,0.15);
+            border: 1px solid var(--accent-warning);
+            color: var(--accent-warning);
+        }
+
+        .status-badge.danger {
+            background: rgba(239,68,68,0.15);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            animation: red-pulse 1.5s infinite;
+        }
+
+        /* BOUTON COMMANDE */
+
+        .control-btn {
+            background: transparent;
+            border: 2px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 13px 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .control-btn:hover {
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+        }
+
+        .control-btn.disabled-state {
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .control-btn.disabled-state:hover {
+            background: var(--accent-red);
+            color: white;
+        }
+
+        /* CAMÉRA */
+
+        .video-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            min-width: 0;
+        }
+
+        .video-panel h2 {
+            margin: 0 0 15px;
+            color: var(--text-muted);
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        /*
+         * IMPORTANT :
+         * Le conteneur garde un ratio 16:9.
+         * L'image utilise contain et jamais cover.
+         * Cela évite le recadrage et l'étirement CSS.
+         */
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            min-height: 0;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            overflow: hidden;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .camera-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 0 2px;
+            color: var(--accent-green);
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+        }
+
+        .camera-status.error {
+            color: var(--accent-red);
+        }
+
+        .camera-status.error .status-dot {
+            background: var(--accent-red);
+        }
+
+        @keyframes red-pulse {
+            0% {
+                box-shadow: 0 0 15px rgba(239,68,68,0.2);
+            }
+            50% {
+                box-shadow: 0 0 35px rgba(239,68,68,0.6);
+            }
+            100% {
+                box-shadow: 0 0 15px rgba(239,68,68,0.2);
+            }
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 1100px) {
+            body {
+                padding: 20px;
+            }
+
+            .main-workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .video-panel {
+                grid-row: 1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 1.6rem;
+            }
+
+            .header p {
+                font-size: 0.75rem;
+            }
+
+            .telemetry-panel {
+                gap: 10px;
+            }
+
+            .card {
+                padding: 20px 8px;
+            }
+
+            .value {
+                font-size: 1.5rem;
+            }
+
+            .video-panel {
+                padding: 10px;
+            }
+
+            .camera-container {
+                aspect-ratio: 16 / 9;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- EN-TÊTE -->
+
+    <div class="header">
+        <h1>Aether<span>Corp</span></h1>
+        <p>SENTINEL-X | CENTRE DE SUPERVISION</p>
+    </div>
+
+    <!-- CONTENU PRINCIPAL -->
+
+    <main class="main-workspace">
+
+        <!-- CAPTEURS -->
+
+        <section class="telemetry-panel">
+
+            <div class="card">
+                <h2>Température</h2>
+                <div class="value" id="val-temp">--.-</div>
+            </div>
+
+            <div class="card">
+                <h2>Humidité</h2>
+                <div class="value" id="val-hum">--.-</div>
+            </div>
+
+            <div class="card full-width" id="card-gas">
+                <h2>Qualité de l'Air (MQ-2)</h2>
+                <div class="value" id="val-gaz">--</div>
+                <div class="status-badge" id="badge-gaz">
+                    INITIALISATION
+                </div>
+            </div>
+
+            <div class="card full-width" id="card-security">
+                <h2>Périmètre (PIR)</h2>
+                <div class="value safe" id="val-intrusion">
+                    SÉCURISÉ
+                </div>
+            </div>
+
+            <div class="card full-width">
+                <h2>Actionneur Physique</h2>
+
+                <div class="value small safe" id="val-alarme">
+                    ARMÉ
+                </div>
+
+                <button
+                    class="control-btn"
+                    id="btn-alarme"
+                    type="button"
+                    onclick="toggleAlarme()"
+                >
+                    DÉSARMER LE SYSTÈME
+                </button>
+            </div>
+
+        </section>
+
+        <!-- SURVEILLANCE VIDÉO -->
+
+        <section class="video-panel">
+
+            <h2>Surveillance Visuelle Directe</h2>
+
+            <div class="camera-container">
+                <img
+                    id="camera-stream"
+                    src="/video_feed"
+                    alt="Flux de la caméra Sentinel-X"
+                >
+            </div>
+
+            <div class="camera-status" id="camera-status">
+                <span class="status-dot"></span>
+                <span id="camera-status-text">
+                    CONNEXION CAMÉRA...
+                </span>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        const cameraImage = document.getElementById(
+            'camera-stream'
+        );
+
+        const cameraStatus = document.getElementById(
+            'camera-status'
+        );
+
+        const cameraStatusText = document.getElementById(
+            'camera-status-text'
+        );
+
+        /*
+         * Le flux MJPEG arrive via /video_feed.
+         * On ne recrée pas l'image chaque seconde.
+         * Cela évite des connexions vidéo concurrentes.
+         */
+
+        cameraImage.addEventListener('load', function () {
+            cameraStatus.classList.remove('error');
+            cameraStatusText.innerText = 'CAMÉRA CONNECTÉE';
+        });
+
+        cameraImage.addEventListener('error', function () {
+            cameraStatus.classList.add('error');
+            cameraStatusText.innerText = 'SIGNAL CAMÉRA INDISPONIBLE';
+        });
+
+        /* TÉLÉMÉTRIE */
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/api/v1/status', {
+                    cache: 'no-store'
+                });
+
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+
+                const data = await response.json();
+
+                document.getElementById('val-temp').innerText =
+                    data.temperature !== '--'
+                        ? data.temperature + '°'
+                        : '--.-';
+
+                document.getElementById('val-hum').innerText =
+                    data.humidite !== '--'
+                        ? data.humidite + '%'
+                        : '--.-';
+
+                /* GAZ */
+
+                const gazVal =
+                    data.gaz !== '--'
+                        ? parseInt(data.gaz, 10)
+                        : '--';
+
+                const gazEl = document.getElementById('val-gaz');
+                const gazBadge = document.getElementById('badge-gaz');
+                const cardGas = document.getElementById('card-gas');
+
+                if (gazVal !== '--' && Number.isFinite(gazVal)) {
+                    gazEl.innerText = gazVal;
+
+                    if (gazVal < 400) {
+                        gazEl.className = 'value safe';
+                        gazBadge.className = 'status-badge safe';
+                        gazBadge.innerText = 'AIR PUR (NORMAL)';
+                        cardGas.classList.remove('alert-mode');
+
+                    } else if (gazVal <= 1000) {
+                        gazEl.className = 'value warning';
+                        gazBadge.className = 'status-badge warning';
+                        gazBadge.innerText = 'AIR VICIÉ (PRÉ-ALERTE)';
+                        cardGas.classList.remove('alert-mode');
+
+                    } else {
+                        gazEl.className = 'value danger';
+                        gazBadge.className = 'status-badge danger';
+                        gazBadge.innerText = 'AIR INTOXIQUÉ (CRITIQUE)';
+                        cardGas.classList.add('alert-mode');
+                    }
+                }
+
+                /* INTRUSION PIR + IA */
+
+                const cardSec = document.getElementById(
+                    'card-security'
+                );
+
+                const valIntrusion = document.getElementById(
+                    'val-intrusion'
+                );
+
+                if (data.intrusion || data.ia_humain) {
+                    cardSec.className =
+                        'card full-width alert-mode';
+
+                    valIntrusion.className = 'value danger';
+
+                    if (data.ia_humain) {
+                        valIntrusion.innerText = 'ALERTE (CAM)';
+                    } else {
+                        valIntrusion.innerText =
+                            'INTRUSION (PIR) !';
+                    }
+
+                } else {
+                    cardSec.className = 'card full-width';
+                    valIntrusion.className = 'value safe';
+                    valIntrusion.innerText = 'SÉCURISÉ';
+                }
+
+                /* ARMEMENT */
+
+                const alarmeStatus = document.getElementById(
+                    'val-alarme'
+                );
+
+                const alarmeBtn = document.getElementById(
+                    'btn-alarme'
+                );
+
+                if (data.alarme_active) {
+                    alarmeStatus.innerText = 'ARMÉ';
+                    alarmeStatus.className = 'value small safe';
+                    alarmeBtn.innerText = 'DÉSARMER';
+                    alarmeBtn.className =
+                        'control-btn disabled-state';
+
+                } else {
+                    alarmeStatus.innerText = 'DÉSARMÉ';
+                    alarmeStatus.className = 'value small danger';
+                    alarmeBtn.innerText = 'RÉARMER';
+                    alarmeBtn.className = 'control-btn';
+                }
+
+            } catch (err) {
+                console.error('Erreur de télémétrie :', err);
+            }
+        }
+
+        /* COMMANDE ESP32 */
+
+        async function toggleAlarme() {
+            const btn = document.getElementById('btn-alarme');
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/api/v1/control', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action: 'toggle'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+
+                await fetchData();
+
+            } catch (err) {
+                console.error('Erreur commande alarme :', err);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        /* ACTUALISATION DES CAPTEURS */
+
+        setInterval(fetchData, 1000);
+        fetchData();
+    </script>
+
+</body>
+</html>
+
