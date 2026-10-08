@@ -18,7 +18,7 @@ except FileNotFoundError:
 # Configuration du serveur MQTT
 MQTT_BROKER = "localhost"
 MQTT_PORT = 1883
-TOPIC_SENSOR_DATA = "sentinel/sensors/telemetry"
+TOPIC_SENSOR_DATA = "sentinel/sensors"
 TOPIC_PREDICTIVE_ALERTS = "sentinel/alerts/predictive"
 
 # Historique des 5 dernières mesures pour calculer les variations
@@ -28,9 +28,9 @@ telemetry_buffer = deque(maxlen=WINDOW_SIZE)
 def extract_kinetic_features(current_readings, buffer):
     # Lecture des données avec des valeurs par défaut normales (Temp: 22, Hum: 50, Gaz: 775)
     temp = current_readings.get("temperature", 22.0)
-    humidity = current_readings.get("humidity", 50.0)
-    gas = current_readings.get("gas", 775.0)
-    
+    humidity = current_readings.get("humidite", 50.0)
+    gas = current_readings.get("gaz", 775.0)
+
     # Calcul de la vitesse de variation (dérivée) si un historique existe
     if len(buffer) < 2:
         d_temp = 0.0
@@ -38,10 +38,10 @@ def extract_kinetic_features(current_readings, buffer):
     else:
         prev_readings = buffer[-2]
         time_delta = max(current_readings["timestamp"] - prev_readings["timestamp"], 0.1)
-        
+
         d_temp = (temp - prev_readings.get("temperature", temp)) / time_delta
         d_gas = (gas - prev_readings.get("gas", gas)) / time_delta
-        
+
     return np.array([[temp, humidity, gas, d_temp, d_gas]])
 
 def on_connect(client, userdata, flags, rc, properties=None):
@@ -54,21 +54,21 @@ def on_message(client, userdata, msg):
         # Décodage du message JSON et ajout de l'heure d'arrivée
         payload = json.loads(msg.payload.decode("utf-8"))
         payload["timestamp"] = time.time()
-        
+
         telemetry_buffer.append(payload)
-        
+
         # Préparation des données pour le modèle
         features = extract_kinetic_features(payload, telemetry_buffer)
-        
+
         # Normalisation des données
         scaled_features = scaler.transform(features)
-        
+
         # Prédiction par l'IA (1 = Normal, -1 = Anomalie)
         prediction = model.predict(scaled_features)
         anomaly_score = model.decision_function(scaled_features)[0]
-        
+
         is_anomaly = bool(prediction[0] == -1)
-        
+
         # Envoi d'une alerte si une anomalie est détectée
         if is_anomaly:
             alert_payload = {
@@ -85,11 +85,11 @@ def on_message(client, userdata, msg):
                 },
                 "message": "Anomalie cinétique détectée"
             }
-            client.publish(TOPIC_PREDICTIVE_ALERTS, json.dumps(alert_payload))
+           # client.publish(TOPIC_PREDICTIVE_ALERTS, json.dumps(alert_payload))
             print(f"[ALERTE PRÉDICTIVE] Anomalie détectée ! Score: {anomaly_score:.4f}")
         else:
             print(f"[STATUT NORMAL] Temp: {payload.get('temperature')}°C | Humidité: {payload.get('humidity')}% | Gaz: {payload.get('gas')} ppm")
-            
+
     except Exception as e:
         print(f"Erreur lors de la lecture des données: {e}")
 

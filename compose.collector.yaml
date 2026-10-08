@@ -1,0 +1,13 @@
+services:
+  collector:
+    build: ./integration/collector
+    container_name: sentinel-collector
+    restart: unless-stopped
+    network_mode: host
+    read_only: true
+
+    tmpfs:
+      - /tmp
+
+    volumes:
+      - /opt/sentinel-secrets/collector/db_password:/run/secrets/db_password:ro

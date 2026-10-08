@@ -3,7 +3,7 @@
 import cv2
 import json
 import time
-import paho.mqtt.client as mqtt 
+import paho.mqtt.client as mqtt
 from ultralytics import YOLO
 
 # CONFIGURATION
@@ -13,8 +13,10 @@ ALERT_TOPIC = "sentinel/alerts/intrusion"
 
 # Chargement du modèle IA et ouverture de la caméra (0 pour la webcam principale)
 model = YOLO("yolov8n.pt")
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0, cv2.CAP_V4L2)
 
+if not cap.isOpened():
+    raise RuntimeError("Impossible d'ouvrir la webcam /dev/video0")
 # Connexion au serveur Mosquitto
 try:
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
@@ -52,7 +54,7 @@ while cap.isOpened():
             person_found = True
             break
 
-    # ENVOI DE L'ALERTE SI UNE PERSONNE EST DÉTECTÉE 
+    # ENVOI DE L'ALERTE SI UNE PERSONNE EST DÉTECTÉE
     now = time.time()
     if person_found and (now - last_alert_time) > 3.0:
         alert = {
