@@ -6,10 +6,14 @@ services:
     restart: unless-stopped
     ports:
       - "1883:1883"
+      - "8883:8883"
     volumes:
       - ./mosquitto/config:/mosquitto/config
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
+      - ./mosquitto/certs/ca.crt:/mosquitto/certs/ca.crt:ro
+      - ./mosquitto/certs/server.crt:/mosquitto/certs/server.crt:ro
+      - /opt/sentinel-secrets/mosquitto/server.key:/mosquitto/certs/server.key:ro
     networks:
       - sentinel-net
 

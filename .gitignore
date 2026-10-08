@@ -12,3 +12,14 @@ mosquitto/certs/*.srl
 # Mosquitto runtime data
 mosquitto/data/
 mosquitto/log/
+
+
+# Identifiants ESP32
+secrets.h
+**/secrets.h
+
+# Secrets et certificats privés
+*.key
+.env
+.env.*
+!.env.example
